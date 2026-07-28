@@ -1,0 +1,14 @@
+//you need vocab files like
+
+
+/* for examples
+a
+about us
+above
+abstraction
+abundant
+accelerate
+acceleration
+accommodation
+
+this order need 2000 unique tokens like this format u can create using ai models to generate */
