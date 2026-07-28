@@ -65,6 +65,7 @@ SRC_CORE = src/tensor.c    \
            src/pipeline.c  \
            src/mnist.c	   \
            src/tokenizer.c \
+           src/tui.c       \
            src/dataset_loader.c
 
 
@@ -121,10 +122,10 @@ cli: apps/cli.c $(OBJ)
 neurix: apps/neurix_cli.c $(OBJ)
 	$(CC) $(CFLAGS) -o neurix apps/neurix_cli.c $(OBJ) $(LDFLAGS) $(GPU_LDFLAGS)
 
-install: neurix
-	mkdir -p ~/.local/bin
-	cp neurix ~/.local/bin/neurix
-	@echo "Successfully installed neurix to ~/.local/bin/neurix"
+#install: neurix
+#	mkdir -p ~/.local/bin
+#	cp neurix ~/.local/bin/neurix
+#	@echo "Successfully installed neurix to ~/.local/bin/neurix"
 
 train: apps/train.c $(OBJ)
 	$(CC) $(CFLAGS) -o train apps/train.c $(OBJ) $(LDFLAGS) $(GPU_LDFLAGS)
