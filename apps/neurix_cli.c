@@ -1,5 +1,5 @@
 /*
- * neurix_cli.c — Antigravity AI Terminal Assistant with 8 Color Themes
+ * neurix_cli.c — AI Terminal Assistant with 8 Color Themes
  */
 
 #define _DEFAULT_SOURCE
