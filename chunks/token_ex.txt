@@ -1,0 +1,4 @@
+this is a example file model store instruction
+
+You can download datasets from Hugging Face to slit inside of the chunks during the training your chunk token count 10000 token per a chunk contain during the trainig
+inside the chunk u add a lakhs of tokens if you have a high end device .. soon i will update soon the instrutions and its easy  
