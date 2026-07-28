@@ -1,4 +1,4 @@
-# Neurix v1 (neuralc)
+# Neurix v1
 
 A native, zero-dependency Neural Network & Language Model Engine written from scratch in pure C.
 
@@ -57,6 +57,10 @@ Neurixv1/
 - gcc compiler (with C11 support)
 - POSIX Terminal (Linux/macOS)
 - make build tool
+
+``` bash
+make
+```
 
 ### 2. Configure Settings (menuconfig)
 Launch the interactive TUI configuration menu:
