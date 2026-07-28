@@ -1,145 +1,143 @@
-# Neurix v1
+# Neurix v1 — Native Zero-Dependency Edge AI Engine in Pure C
 
-A native, zero-dependency Neural Network & Language Model Engine written from scratch in pure C.
-
----
-
-## Overview
-
-Neurix v1 is a lightweight, high-performance C engine designed for training and running Recurrent Neural Network (RNN) language models. Built as an advanced evolution and development of the neuralc C Neural Network library framework, Neurix v1 operates without external deep learning libraries (such as PyTorch or TensorFlow), implementing every layer, matrix operation, backpropagation algorithm, and terminal configuration utility from first principles.
-
-### Key Highlights
-- Zero External Dependencies: Core math, tensor routines, and interactive configuration TUI built strictly in standard C (C11/POSIX).
-- Kernel-Style menuconfig TUI: Linux kernel-inspired terminal interface to configure hyper-parameters, hardware bindings, and compiler flags without writing code.
-- Full Training & Inference Stack:
-  - Custom N-dimensional Tensor engine with row-major memory views.
-  - Dense (Linear) layers, Softmax, and Recurrent Neural Network (RNN) layers with Backpropagation Through Time (BPTT).
-  - SGD Optimizer with Momentum, Weight Decay, and L2 Gradient Clipping.
-  - Custom Tokenizer (Char/Word) & Streamed Binary Dataset Loader.
-  - Advanced Samplers: Temperature, Top-K, Top-P (Nucleus), and Greedy sampling.
-- Hardware Acceleration: Multi-threaded execution via OpenMP with support for CUDA and OpenCL backends.
+> **"Why wait for someone else to build an embedded AI engine in C? Empowering low-end systems and edge devices with lightweight, high-performance neural intelligence."**
 
 ---
 
-## Repository Structure
+##  The Creator's Story & Project Vision
+
+Modern Artificial Intelligence is often locked behind massive 2+ GB frameworks (PyTorch, TensorFlow) that demand expensive GPUs, python runtimes, and high-end hardware. 
+
+**Neurix v1** was created to break those barriers. Built over **7 weeks of dedicated free-time coding and holidays** by an independent developer, this project proves that you don’t need an enterprise budget or a heavy Python environment to run AI models. By leveraging C11 from first principles, Neurix v1 brings neural network training and inference directly to **low-end hardware, microcontrollers, Raspberry Pi, and embedded systems** in a single **4.4 MB binary**.
+
+---
+
+## Key Highlights & Engineering Features
+
+- ** Zero External Dependencies**: 100% written in standard C (C11/POSIX). No PyTorch, no Python, no heavy third-party math bloat.
+- ** Embedded & Edge Systems Ready**: Engineered for ultra-low footprint devices. Runs anywhere standard C compiles.
+- ** Classic Antigravity CLI Interface**: Sleek terminal UI featuring straight divider frames, purple aesthetics, 8 selectable color themes, and smooth character typing animations.
+- ** Dynamic Window Auto-Resizing (`SIGWINCH`)**: Catches OS window resize signals (`ioctl`) to automatically adjust border frames live when minimizing, maximizing, or dragging your terminal window.
+- ** Dynamic Path Auto-Discovery**: Automatically locates model weights (`model.bin`) and vocabularies (`assets/vocab.txt`) across environment variables, working directories, or binary location (`/proc/self/exe`).
+- ** Kernel-Style `menuconfig` TUI**: Linux kernel-inspired terminal interface (`make config`) to adjust hyperparameters without touching source code.
+- ** Multi-Core Hardware Acceleration**: Parallel execution via OpenMP CPU threading with optional CUDA & OpenCL GPU backend hooks.
+
+---
+
+##  How Neurix v1 Works (Under the Hood)
+
+For new users wanting to understand the inner workings of Neurix v1, the architecture is divided into decoupled, modular C translation units:
 
 ```text
 Neurixv1/
-├── apps/                  # Executable applications (train, cli, pipeline)
-│   ├── train.c            # Model training pipeline
-│   ├── cli.c              # Interactive text generation CLI
-│   └── pipeline.c         # Inference pipeline library
-├── config/                # TUI Configuration engine (menuconfig)
-│   ├── config_ui.c        # ANSI/termios terminal UI implementation
-│   ├── config_ui.h        # Configuration structs & definitions
-│   └── neuralc_config_main.c # Main entry point for menuconfig
-├── include/               # Public headers (tensor, rnn, nn, optimizer, etc.)
-├── src/                   # Core math, layers, samplers, and tokenizers
-│   ├── tensor.c           # Matrix/Tensor memory management & math
-│   ├── rnn.c              # Recurrent layer implementation & BPTT
-│   ├── layer.c            # Dense layers & activations
-│   ├── optimizer.c        # SGD, Momentum, and Gradient clipping
-│   ├── tokenizer.c        # Vocabulary encoding & decoding
-│   ├── sampler.c          # Logit sampling algorithms
-│   └── dataset_loader.c   # Streaming binary batch loader
-├── tools/                 # Diagnostic and sanity testing tools
-│   └── sanity_test.c      # Model check & tensor validation tool
-├── assets/                # Data corpora and vocabulary files
-├── Makefile               # Build automation & auto-config auto-loader
-└── neuralc_config.h       # Auto-generated parameter manifest (via menuconfig)
+├── apps/                  # Application Entry Points
+│   ├── neurix_cli.c       # Antigravity interactive CLI shell & REPL loop
+│   ├── train.c            # Streaming dataset model trainer
+│   ├── cli.c              # Basic inference utility
+│   └── pipeline.c         # High-level model loader & inference pipeline
+├── include/               # Public C Headers
+│   ├── tui.h              # Antigravity TUI engine header
+│   ├── tensor.h           # N-dimensional tensor math header
+│   ├── pipeline.h         # Model loader & step pipeline header
+│   └── tokenizer.h        # Tokenizer & vocabulary header
+├── src/                   # Core Math & Engine Implementation
+│   ├── tui.c              # Terminal UI engine (termios raw mode, SIGWINCH, themes)
+│   ├── tensor.c           # Custom row-major matrix/tensor memory routines
+│   ├── rnn.c              # Recurrent Neural Network layers & BPTT algorithms
+│   ├── layer.c            # Dense (linear) layers, Softmax, activations
+│   ├── optimizer.c        # SGD with momentum, weight decay, gradient clipping
+│   ├── tokenizer.c        # Greedy byte/word vocabulary encoder & decoder
+│   ├── sampler.c          # Temperature, Top-K, Top-P (Nucleus) samplers
+│   └── dataset_loader.c   # Streaming binary batch dataset loader
+└── Makefile               # C11 build automation & auto-config loader
 ```
+
+### The 4 Execution Steps:
+1. **Tensor Math (`src/tensor.c`)**: Manages contiguous N-dimensional floating-point arrays, matrix multiplications (`GEMM`), vector additions, and SIMD vectorizations.
+2. **Neural Forward Pass & BPTT (`src/rnn.c`, `src/layer.c`)**: Calculates hidden state transitions across timesteps for sequence generation and backpropagates gradients through time during training.
+3. **Logit Sampling (`src/sampler.c`)**: Scaled Softmax probabilities using Temperature and Top-K filtering to select next-token output IDs.
+4. **Antigravity TUI Shell (`src/tui.c`, `apps/neurix_cli.c`)**: Renders framed terminal prompts, handles Linux raw-mode keyboard inputs, listens to `SIGWINCH` resize events, and streams generated text output smoothly.
 
 ---
 
-## Quickstart Guide
+##  Quickstart Guide for New Users
 
-### 1. Prerequisites
-- gcc compiler (with C11 support)
-- POSIX Terminal (Linux/macOS)
-- make build tool
+### 1. Build the Neurix Assistant
+Compile the native binary with zero external dependencies:
 
-``` bash
-make
+```bash
+make neurix
 ```
 
-### 2. Configure Settings (menuconfig)
-Launch the interactive TUI configuration menu:
+### 2. Run the Interactive CLI
+Launch the chatbot terminal (it automatically discovers `model.bin` and `assets/vocab.txt`):
+
+```bash
+./neurix
+```
+
+### 3. Interactive Slash Commands Inside CLI
+Inside `./neurix`, you can type commands starting with `/`:
+
+| Command | Action |
+|---|---|
+| `/help` | Display command manual and active hyperparameters |
+| `/theme` | Open interactive arrow-key selector (8 Color Palettes) |
+| `/status` | Display system dashboard (Model, Vocab, Hardware status) |
+| `/temp <val>` | Set sampling temperature dynamically (e.g. `/temp 0.30` for coherent text) |
+| `/topk <val>` | Set Top-K sampling cap dynamically (e.g. `/topk 10`) |
+| `/log` | Run test demonstration of colored log badges |
+| `/reset` | Reset model hidden state memory |
+| `/clear` | Clear terminal screen |
+| `/exit` | Quit Neurix CLI |
+
+---
+
+##  8 Selectable Color Themes
+
+Type `/theme` in the CLI to switch color palettes using **↑ / ↓ Arrow Keys**:
+
+1. **Classic Purple (Default)** — Sleek Purple / Magenta / White
+2. **Cyberpunk Cyan** — Neon Cyan / Pink
+3. **Matrix Green** — Electric Green / Yellow
+4. **Sunset Orange** — Neon Orange / Gold
+5. **Electric Blue** — Cobalt Blue / Bright Cyan
+6. **Crimson Red** — Neon Crimson / Coral
+7. **Emerald Mint** — Teal / Mint Green
+8. **Monochrome Dark** — Slate Gray / Silver Minimalist
+
+---
+
+##  Training Your Own Model on Custom Text
+
+Want to train Neurix on your own text dataset (books, code, or stories)?
+
+### Step 1: Configure Hyperparameters
+Launch the kernel-style configuration menu:
 
 ```bash
 make config
 ```
 
-Use Arrow Keys to navigate, Space/Enter to toggle or select values, and S to save settings to neuralc_config.h.
+Use Arrow Keys to set `HIDDEN_SIZE` (e.g. 256 or 512) and `EPOCHS` (e.g. 50), then press `S` to save.
 
-### 3. Train a Model
-Train an RNN language model on your dataset:
+### Step 2: Run Training
+Place your raw text in `assets/data.txt` and run:
 
 ```bash
 make train
 ./train assets/data.txt assets/vocab.txt model.bin
 ```
 
-During training, train streams mini-batches from assets/data.txt, tokenizes tokens on-the-fly, computes cross-entropy loss, clips gradients, updates weights via SGD, and writes model.bin.
-
-### 4. Run Text Generation (Neurix CLI)
-You can launch the interactive chatbot terminal directly without needing file paths:
-
+### Step 3: Run Your New Model
 ```bash
-
-
+./neurix
 ```
 
-Or install it globally to your user path:
-
-```bash
-make install
-neurix
-```
-
-When run, neurix automatically discovers model.bin and assets/vocab.txt, renders a terminal prompt UI (User >), and streams token generation in real time. Inside the terminal shell, you can use slash commands:
-- /help — Show help and active sampling settings
-- /temp <val> — Adjust temperature dynamically (e.g. /temp 0.7)
-- /topk <val> — Adjust Top-K sampling dynamically (e.g. /topk 40)
-- /reset — Reset hidden state memory
-- /exit — Exit shell
-
-### 5. Run Model Sanity Diagnostic
-Validate tensor integrity, logit distributions, and step-by-step decoding:
-
-```bash
-make sanity
-./sanity model.bin assets/vocab.txt "The machine"
-```
+>  **Tip for Smarter Output**: Set temperature lower (`/temp 0.30`) and Top-K lower (`/topk 10`) inside `./neurix` to produce focused, highly coherent text!
 
 ---
 
-## Configuration Parameters (neuralc_config.h)
+## 📜 License
 
-Parameters can be adjusted interactively via make config or passed via #define:
-
-| Parameter | Macro Name | Description | Default |
-|---|---|---|---|
-| Hidden Size | HIDDEN_SIZE | Dimension of RNN hidden state vectors | 256 |
-| Sequence Length | SEQ_LEN | Number of timesteps per training batch | 20 |
-| Sampling Temp | TEMPERATURE | Temperature factor for output logit scaling | 0.8000 |
-| Batch Size | BATCH_SIZE | Samples per gradient update step | 8 |
-| Learning Rate | LEARNING_RATE | Step size for gradient updates | 0.0100 |
-| Epoch Cycles | EPOCHS | Total passes over dataset | 20 |
-| OpenMP Threads | NEURALC_OMP_THREADS | Number of CPU cores bound to OpenMP ops | Auto |
-
----
-
-## Build Commands Summary
-
-- make config — Build & auto-run interactive menuconfig TUI.
-- make train — Build model trainer (./train).
-- make cli — Build prompt inference shell (./cli).
-- make sanity — Build diagnostic verification tool (./sanity).
-- make all — Build all primary engine targets.
-- make clean — Remove object files and compiled binaries.
-
----
-
-## License
-
-Distributed under the Apache License 2.0. See LICENSE for details.
+Distributed under the Apache License 2.0. See [LICENSE](LICENSE) for details.
