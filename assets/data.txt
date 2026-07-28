@@ -1,1 +1,14 @@
 This file can store the hand wrote notes, you can manually add tokens inside this file. token means any texted almost 200k  
+like this 
+
+<start> the animal synthesized the compound in order to find new sources of energy <end>
+<start> after months of work the ecosystem finally isolated the protein <end>
+<start> researchers waited about ten thousand minutes before recording new data <end>
+<start> alright have you heard anything new about the home repairs <end>
+<start> when the queue is empty the loop automatically processes the data <end>
+<start> by the way have you heard anything new about the movie <end>
+<start> when the network is slow the model automatically parses the input <end>
+<start> listen have you heard anything new about the game <end>
+<start> hmm do you have any questions about the meeting <end>
+
+start / end points 
