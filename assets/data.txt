@@ -1,0 +1,1 @@
+This file can store the hand wrote notes, you can manually add tokens inside this file. token means any texted almost 200k  
