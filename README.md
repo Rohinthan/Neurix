@@ -85,8 +85,8 @@ During training, train streams mini-batches from assets/data.txt, tokenizes toke
 You can launch the interactive chatbot terminal directly without needing file paths:
 
 ```bash
-make neurix
-./neurix
+
+
 ```
 
 Or install it globally to your user path:
