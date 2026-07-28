@@ -1,9 +1,9 @@
 /*
- * neurix_cli.c — Standalone Interactive Chatbot Terminal Interface for Neurix v1
- *
- * Provides a rich, auto-discovering REPL shell with styled upper/lower TUI borders
- * for direct communication with trained Neurix models.
+ * neurix_cli.c — Antigravity AI Terminal Assistant with 8 Color Themes
  */
+
+#define _DEFAULT_SOURCE
+#define _POSIX_C_SOURCE 200809L
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,68 +14,104 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
+#include "tui.h"
+#include "pipeline.h"
+#include "tokenizer.h"
+
 #define MAX_TOKENS      512
 #define MAX_NEW_TOKENS  100
 #define INPUT_BYTES     4096
 #define MAX_VOCAB       65536
 
-// Default hyperparameters
+// Hyperparameters
 static float g_temperature = 0.80f;
 static int   g_top_k       = 20;
 static float g_rep_penalty = 1.20f;
-
-// Color and formatting escape codes
-#define COLOR_RESET   "\033[0m"
-#define COLOR_BOLD    "\033[1m"
-#define COLOR_CYAN    "\033[36m"
-#define COLOR_GREEN   "\033[32m"
-#define COLOR_YELLOW  "\033[33m"
-#define COLOR_BLUE    "\033[34m"
-#define COLOR_MAGENTA "\033[35m"
-#define COLOR_WHITE   "\033[37m"
+static int   g_typing_speed_us = 10000; // 10ms per char
 
 static int file_exists(const char *path) {
     struct stat buffer;
     return (stat(path, &buffer) == 0);
 }
 
-// Auto-discover model and vocab files across standard locations
+static void get_exe_directory(char *dir_out, size_t max_sz) {
+    dir_out[0] = '\0';
+    char path[1024];
+    ssize_t count = readlink("/proc/self/exe", path, sizeof(path) - 1);
+    if (count != -1) {
+        path[count] = '\0';
+        char *slash = strrchr(path, '/');
+        if (slash) {
+            *slash = '\0';
+            snprintf(dir_out, max_sz, "%s", path);
+        }
+    }
+}
+
+// Auto-discover model and vocab files across standard locations dynamically
 static int auto_discover_files(char *model_out, size_t model_sz,
                                char *vocab_out, size_t vocab_sz) {
-    const char *model_candidates[] = {
-        "model.bin",
-        "/home/raccoon/Neurixv1/model.bin",
-        "./assets/model.bin"
-    };
+    const char *env_model = getenv("NEURIX_MODEL_PATH");
+    const char *env_vocab = getenv("NEURIX_VOCAB_PATH");
 
-    const char *vocab_candidates[] = {
-        "assets/vocab.txt",
-        "vocab.txt",
-        "/home/raccoon/Neurixv1/assets/vocab.txt",
-        "./vocab.txt"
-    };
+    if (env_model && file_exists(env_model)) {
+        snprintf(model_out, model_sz, "%s", env_model);
+    }
+    if (env_vocab && file_exists(env_vocab)) {
+        snprintf(vocab_out, vocab_sz, "%s", env_vocab);
+    }
 
-    int found_model = 0;
-    for (size_t i = 0; i < sizeof(model_candidates)/sizeof(model_candidates[0]); i++) {
-        if (file_exists(model_candidates[i])) {
-            strncpy(model_out, model_candidates[i], model_sz - 1);
-            model_out[model_sz - 1] = '\0';
-            found_model = 1;
-            break;
+    char exe_dir[1024] = "";
+    get_exe_directory(exe_dir, sizeof(exe_dir));
+    char path_buf[1024];
+
+    if (model_out[0] == '\0') {
+        const char *model_candidates[] = {
+            "model.bin",
+            "assets/model.bin",
+            "../model.bin",
+            "../assets/model.bin",
+            "./assets/model.bin"
+        };
+        for (size_t i = 0; i < sizeof(model_candidates)/sizeof(model_candidates[0]); i++) {
+            if (file_exists(model_candidates[i])) {
+                snprintf(model_out, model_sz, "%s", model_candidates[i]);
+                break;
+            }
+            if (exe_dir[0] != '\0') {
+                snprintf(path_buf, sizeof(path_buf), "%s/%s", exe_dir, model_candidates[i]);
+                if (file_exists(path_buf)) {
+                    snprintf(model_out, model_sz, "%s", path_buf);
+                    break;
+                }
+            }
         }
     }
 
-    int found_vocab = 0;
-    for (size_t i = 0; i < sizeof(vocab_candidates)/sizeof(vocab_candidates[0]); i++) {
-        if (file_exists(vocab_candidates[i])) {
-            strncpy(vocab_out, vocab_candidates[i], vocab_sz - 1);
-            vocab_out[vocab_sz - 1] = '\0';
-            found_vocab = 1;
-            break;
+    if (vocab_out[0] == '\0') {
+        const char *vocab_candidates[] = {
+            "assets/vocab.txt",
+            "vocab.txt",
+            "../assets/vocab.txt",
+            "../vocab.txt",
+            "./vocab.txt"
+        };
+        for (size_t i = 0; i < sizeof(vocab_candidates)/sizeof(vocab_candidates[0]); i++) {
+            if (file_exists(vocab_candidates[i])) {
+                snprintf(vocab_out, vocab_sz, "%s", vocab_candidates[i]);
+                break;
+            }
+            if (exe_dir[0] != '\0') {
+                snprintf(path_buf, sizeof(path_buf), "%s/%s", exe_dir, vocab_candidates[i]);
+                if (file_exists(path_buf)) {
+                    snprintf(vocab_out, vocab_sz, "%s", path_buf);
+                    break;
+                }
+            }
         }
     }
 
-    return (found_model && found_vocab);
+    return (model_out[0] != '\0' && vocab_out[0] != '\0');
 }
 
 static void apply_temperature(float *logits, int vocab, float temp) {
@@ -168,9 +204,11 @@ static void run_generation(Pipeline *pipeline, Tokenizer *tokenizer,
                             int *tokens, float *logits, int *seen) {
     int num_tokens = tokenizer_encode(tokenizer, prompt_text, tokens, MAX_TOKENS);
     if (num_tokens <= 0) {
-        printf(COLOR_YELLOW "Neurix > Could not parse prompt input.\n" COLOR_RESET);
+        tui_log_warn("Could not parse prompt input into tokens.");
         return;
     }
+
+    tui_show_spinner("Thinking", 250);
 
     memset(seen, 0, (size_t)vocab_size * sizeof(int));
     for (int i = 0; i < num_tokens; i++)
@@ -184,10 +222,8 @@ static void run_generation(Pipeline *pipeline, Tokenizer *tokenizer,
     if (max_new_tokens > MAX_TOKENS - num_tokens)
         max_new_tokens = MAX_TOKENS - num_tokens;
 
-    // Draw Upper Response Frame Line
-    printf(COLOR_GREEN COLOR_BOLD "┌── Neurix AI Response ──────────────────────────────────────┐\n" COLOR_RESET);
-    printf(COLOR_GREEN "  " COLOR_RESET);
-    fflush(stdout);
+    const Theme *th = tui_get_theme();
+    printf("\n%s%sNeurix >%s ", ANSI_BOLD, th->primary, ANSI_RESET);
 
     for (int step = 0; step < max_new_tokens; step++) {
         int next_token = generate_next_token(cur_logits, vocab_size, seen,
@@ -200,11 +236,13 @@ static void run_generation(Pipeline *pipeline, Tokenizer *tokenizer,
         char piece[256];
         int written = tokenizer_decode(tokenizer, &next_token, 1, piece, sizeof(piece));
         if (written > 0) {
+            char formatted_piece[300];
             if (piece[0] == ' ')
-                printf("%s", piece);
+                snprintf(formatted_piece, sizeof(formatted_piece), "%s", piece);
             else
-                printf(" %s", piece);
-            fflush(stdout);
+                snprintf(formatted_piece, sizeof(formatted_piece), " %s", piece);
+
+            tui_type_text(formatted_piece, g_typing_speed_us);
         }
 
         if (next_token == eos_id) break;
@@ -212,61 +250,92 @@ static void run_generation(Pipeline *pipeline, Tokenizer *tokenizer,
         cur_logits = pipeline_step(pipeline, next_token);
         if (!cur_logits) break;
     }
-    
-    // Draw Lower Response Frame Line
-    printf("\n" COLOR_GREEN COLOR_BOLD "└─────────────────────────────────────────────────────────────┘\n\n" COLOR_RESET);
-    fflush(stdout);
-}
 
-static void print_banner(const char *model_path, const char *vocab_path) {
-    printf(COLOR_CYAN COLOR_BOLD);
-    printf("┌─────────────────────────────────────────────────────────────┐\n");
-    printf("│ NEURIX v1 — Interactive Terminal AI Chatbot                 │\n");
-    printf("├─────────────────────────────────────────────────────────────┤\n");
-    printf("│ Model: %-52s │\n", model_path);
-    printf("│ Vocab: %-52s │\n", vocab_path);
-    printf("├─────────────────────────────────────────────────────────────┤\n");
-    printf("│ Commands: /help  /temp <val>  /topk <val>  /reset  /exit    │\n");
-    printf("└─────────────────────────────────────────────────────────────┘\n" COLOR_RESET);
     printf("\n");
 }
 
-static void print_help(void) {
-    printf(COLOR_CYAN COLOR_BOLD "┌── Neurix Slash Commands ───────────────────────────────────┐\n" COLOR_RESET);
-    printf("  /help         - Display command help\n");
-    printf("  /temp <val>   - Set sampling temperature (current: %.2f)\n", g_temperature);
-    printf("  /topk <val>   - Set Top-K sampling cap (current: %d)\n", g_top_k);
-    printf("  /reset        - Reset hidden states & memory\n");
-    printf("  /exit         - Quit Neurix CLI\n");
-    printf(COLOR_CYAN COLOR_BOLD "└─────────────────────────────────────────────────────────────┘\n\n" COLOR_RESET);
+static void print_help_menu(void) {
+    const Theme *th = tui_get_theme();
+    printf("\n%s[NEURIX COMMANDS]%s\n", th->primary, ANSI_RESET);
+    printf("  %s/help%s         - Display help manual\n", th->primary, ANSI_RESET);
+    printf("  %s/theme%s        - Open interactive arrow-key theme selector (8 themes)\n", th->primary, ANSI_RESET);
+    printf("  %s/status%s       - Display live system status & parameters\n", th->primary, ANSI_RESET);
+    printf("  %s/temp <val>%s   - Set sampling temperature (current: %.2f)\n", th->primary, ANSI_RESET, g_temperature);
+    printf("  %s/topk <val>%s   - Set Top-K sampling cap (current: %d)\n", th->primary, ANSI_RESET, g_top_k);
+    printf("  %s/log%s          - Test colored status logs\n", th->primary, ANSI_RESET);
+    printf("  %s/reset%s        - Reset hidden states & KV cache\n", th->primary, ANSI_RESET);
+    printf("  %s/clear%s        - Clear terminal screen\n", th->primary, ANSI_RESET);
+    printf("  %s/exit%s         - Quit Neurix CLI\n", th->primary, ANSI_RESET);
+}
+
+static void print_status_dashboard(const char *model_path, const char *vocab_path) {
+    const Theme *th = tui_get_theme();
+    printf("\n%s[SYSTEM DASHBOARD]%s\n", th->primary, ANSI_RESET);
+    printf("  Model File  : %s\n", model_path);
+    printf("  Vocab File  : %s\n", vocab_path);
+    printf("  Theme       : %s%s%s\n", th->primary, th->name, ANSI_RESET);
+    printf("  Temperature : %.2f\n", g_temperature);
+    printf("  Top-K       : %d\n", g_top_k);
+    printf("  Rep Penalty : %.2f\n", g_rep_penalty);
+    printf("  Status      : \033[32mACTIVE & OPERATIONAL\033[0m\n");
+}
+
+static void handle_theme_selection(void) {
+    const char *options[] = {
+        "Classic Purple   (Default)",
+        "Cyberpunk Cyan   (Cyan Accent)",
+        "Matrix Green     (Electric Green)",
+        "Sunset Orange    (Neon Orange)",
+        "Electric Blue    (Cobalt Blue)",
+        "Crimson Red      (Neon Crimson)",
+        "Emerald Mint     (Teal / Mint)",
+        "Monochrome Dark  (Slate Gray / Silver)"
+    };
+    int selected = tui_interactive_menu("Select Palette", options, 8);
+    if (selected >= 0 && selected < 8) {
+        tui_set_theme((ThemeID)selected);
+        tui_log_success("Theme updated to: %s", tui_get_theme_name((ThemeID)selected));
+    }
+}
+
+static void demo_colored_logs(void) {
+    printf("\n");
+    tui_log_info("Initializing Neural Network pipeline engine...");
+    tui_log_warn("High memory allocation detected in KV cache.");
+    tui_log_error("Sample error message: Model parameter out of bounds.");
+    tui_log_success("All system components validated cleanly!");
 }
 
 int main(int argc, char **argv) {
+    tui_init();
     srand((unsigned)time(NULL) ^ (unsigned)(uintptr_t)&argc);
 
     char model_path[1024] = "";
     char vocab_path[1024] = "";
 
     if (argc >= 3) {
-        strncpy(model_path, argv[1], sizeof(model_path) - 1);
-        strncpy(vocab_path, argv[2], sizeof(vocab_path) - 1);
+        snprintf(model_path, sizeof(model_path), "%s", argv[1]);
+        snprintf(vocab_path, sizeof(vocab_path), "%s", argv[2]);
     } else {
         if (!auto_discover_files(model_path, sizeof(model_path), vocab_path, sizeof(vocab_path))) {
-            fprintf(stderr, COLOR_YELLOW "Error: Model file (model.bin) or Vocab file (assets/vocab.txt) not found.\n" COLOR_RESET);
+            tui_log_error("Model file (model.bin) or Vocab file (assets/vocab.txt) not found.");
             fprintf(stderr, "Usage: neurix [model.bin] [assets/vocab.txt]\n");
             return 1;
         }
     }
 
+    tui_clear_screen();
+    tui_print_header_banner("v1.0", model_path);
+
     Pipeline *pipeline = pipeline_load(model_path);
     if (!pipeline) {
-        fprintf(stderr, "Error: Could not load model from '%s'\n", model_path);
+        tui_log_error("Could not load model from '%s'", model_path);
         return 1;
     }
 
     Tokenizer *tokenizer = tokenizer_load(vocab_path);
     if (!tokenizer) {
-        fprintf(stderr, "Error: Could not load tokenizer from '%s'\n", vocab_path);
+        tui_log_error("Could not load tokenizer from '%s'", vocab_path);
         return 1;
     }
 
@@ -278,57 +347,73 @@ int main(int argc, char **argv) {
     int   *seen   = calloc((size_t)vocab_size, sizeof(*seen));
 
     if (!tokens || !logits || !seen) {
-        fprintf(stderr, "Error: Out of memory\n");
+        tui_log_error("Out of memory allocation failure.");
         return 1;
     }
 
-    print_banner(model_path, vocab_path);
-
     char input[INPUT_BYTES];
     while (1) {
-        // Upper User Prompt Box Frame
-        printf(COLOR_BLUE COLOR_BOLD "┌── User Prompt ──────────────────────────────────────────────┐\n" COLOR_RESET);
-        printf(COLOR_BLUE COLOR_BOLD "│ " COLOR_WHITE "User > " COLOR_RESET);
-        fflush(stdout);
+        tui_print_antigravity_input_frame_start();
 
         if (!fgets(input, sizeof(input), stdin)) break;
 
-        input[strcspn(input, "\r\n")] = '\0';
-        if (input[0] == '\0') {
-            printf(COLOR_BLUE COLOR_BOLD "└─────────────────────────────────────────────────────────────┘\n\n" COLOR_RESET);
-            continue;
-        }
+        tui_print_antigravity_input_frame_end();
 
-        printf(COLOR_BLUE COLOR_BOLD "└─────────────────────────────────────────────────────────────┘\n" COLOR_RESET);
+        input[strcspn(input, "\r\n")] = '\0';
+        if (input[0] == '\0') continue;
 
         // Handle slash commands
         if (strcmp(input, "/exit") == 0 || strcmp(input, "/quit") == 0) {
-            printf(COLOR_CYAN "\nExiting Neurix Assistant.\n" COLOR_RESET);
+            tui_log_info("Goodbye! Session closed.");
             break;
         } else if (strcmp(input, "/help") == 0) {
-            print_help();
+            print_help_menu();
+            continue;
+        } else if (strcmp(input, "/theme") == 0) {
+            handle_theme_selection();
+            continue;
+        } else if (strcmp(input, "/status") == 0) {
+            print_status_dashboard(model_path, vocab_path);
+            continue;
+        } else if (strcmp(input, "/log") == 0) {
+            demo_colored_logs();
+            continue;
+        } else if (strcmp(input, "/clear") == 0) {
+            tui_clear_screen();
+            tui_print_header_banner("v1.0", model_path);
             continue;
         } else if (strncmp(input, "/temp ", 6) == 0) {
             float t = strtof(input + 6, NULL);
             if (t > 0.0f) {
                 g_temperature = t;
-                printf(COLOR_GREEN "Temperature updated to %.2f\n\n" COLOR_RESET, g_temperature);
+                tui_log_success("Temperature updated to %.2f", g_temperature);
             } else {
-                printf(COLOR_YELLOW "Invalid temperature value.\n\n" COLOR_RESET);
+                tui_log_warn("Invalid temperature value.");
             }
             continue;
         } else if (strncmp(input, "/topk ", 6) == 0) {
             int k = atoi(input + 6);
             if (k > 0) {
                 g_top_k = k;
-                printf(COLOR_GREEN "Top-K updated to %d\n\n" COLOR_RESET, g_top_k);
+                tui_log_success("Top-K updated to %d", g_top_k);
             } else {
-                printf(COLOR_YELLOW "Invalid Top-K value.\n\n" COLOR_RESET);
+                tui_log_warn("Invalid Top-K value.");
             }
             continue;
         } else if (strcmp(input, "/reset") == 0) {
             pipeline_reset(pipeline);
-            printf(COLOR_GREEN "Model hidden states reset.\n\n" COLOR_RESET);
+            tui_log_success("Model hidden states and memory reset.");
+            continue;
+        }
+
+        // Code highlight fallback
+        if (strncmp(input, "code", 4) == 0 || strncmp(input, "def ", 4) == 0 || strncmp(input, "int ", 4) == 0) {
+            const char *sample_code =
+                "int main(void) {\n"
+                "    printf(\"Hello, Neurix Antigravity CLI!\\n\");\n"
+                "    return 0;\n"
+                "}";
+            tui_print_highlighted_code(sample_code);
             continue;
         }
 
