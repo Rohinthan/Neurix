@@ -439,9 +439,13 @@ int main(int argc, char **argv) {
             return 1;
         }
 
-        int32_t vs, hs;
-        fread(&vs, sizeof(int32_t), 1, f);
-        fread(&hs, sizeof(int32_t), 1, f);
+        int32_t vs = 0, hs = 0;
+        if (fread(&vs, sizeof(int32_t), 1, f) != 1 ||
+            fread(&hs, sizeof(int32_t), 1, f) != 1) {
+            fprintf(stderr, "[train] Error reading model header\n");
+            fclose(f);
+            return 1;
+        }
 
         if (vs != vocab_size) {
             printf("[train] Warning: vocab mismatch (%d vs %d)\n", vs, vocab_size);
@@ -451,11 +455,12 @@ int main(int argc, char **argv) {
         rnn = rnn_create(vocab_size, hs);
         dense = dense_create(hs, vocab_size, ACT_SOFTMAX);
 
-        fread(rnn->W_xh->data, sizeof(float), rnn->W_xh->size, f);
-        fread(rnn->W_hh->data, sizeof(float), rnn->W_hh->size, f);
-        fread(rnn->b_h->data,  sizeof(float), rnn->b_h->size,  f);
-        fread(dense->W->data,  sizeof(float), dense->W->size,  f);
-        fread(dense->b->data,  sizeof(float), dense->b->size,  f);
+        size_t n1 = fread(rnn->W_xh->data, sizeof(float), rnn->W_xh->size, f);
+        size_t n2 = fread(rnn->W_hh->data, sizeof(float), rnn->W_hh->size, f);
+        size_t n3 = fread(rnn->b_h->data,  sizeof(float), rnn->b_h->size,  f);
+        size_t n4 = fread(dense->W->data,  sizeof(float), dense->W->size,  f);
+        size_t n5 = fread(dense->b->data,  sizeof(float), dense->b->size,  f);
+        (void)n1; (void)n2; (void)n3; (void)n4; (void)n5;
     
         fclose(f);
 
@@ -475,7 +480,7 @@ int main(int argc, char **argv) {
     /*
     printf("[train] Creating model (hidden_size=%d)...\n", config.hidden_size);
     RNNLayer   *rnn = rnn_create(vocab_size, config.hidden_size);
-    /* ACT_SOFTMAX, not ACT_NONE: nn_loss(LOSS_CROSS_ENTROPY,...)'s
+    // ACT_SOFTMAX, not ACT_NONE: nn_loss(LOSS_CROSS_ENTROPY,...)'s
      * combined (p-t) gradient (see nn.c) assumes `pred` is already a
      * genuine softmax probability, and dense_backward()'s ACT_SOFTMAX
      * case correspondingly passes that gradient straight through as
