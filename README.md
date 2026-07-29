@@ -138,6 +138,9 @@ make train
 
 ---
 
+## the model need .bin trained data and vocab.txt file or you can train this model on your self :
+
+
 ## 📜 License
 
 Distributed under the Apache License 2.0. See [LICENSE](LICENSE) for details.
