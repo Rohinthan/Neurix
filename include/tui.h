@@ -1,5 +1,5 @@
 /*
- * tui.h — Expanded Color Theme Options for Neurix CLI
+ * tui.h — Expanded Color Theme Options for Neurix Antigravity CLI
  */
 
 #ifndef NEURIX_TUI_H
