@@ -173,8 +173,8 @@ build/demo_char_rnn.o: examples/demo_char_rnn.c
 	$(CC) $(CFLAGS) -c examples/demo_char_rnn.c -o build/demo_char_rnn.o
 
 # ── tests ─────────────────────────────────────────────────────────
-test: $(OBJ) build/test_tensor.o
-	$(CC) $(CFLAGS) -o test_tensor $(OBJ) build/test_tensor.o $(LDFLAGS) $(GPU_LDFLAGS)
+test: $(OBJ) build/test_autograd.o
+	$(CC) $(CFLAGS) -o test_tensor $(OBJ) build/test_autograd.o $(LDFLAGS) $(GPU_LDFLAGS)
 	@echo "Running tests..."
 	@./test_tensor
 
@@ -244,7 +244,7 @@ omp: all
 # ── clean ─────────────────────────────────────────────────────────
 clean:
 	rm -f build/*.o
-	rm -f neuralc demo rnn_demo mnist_demo cnn_mnist test_tensor demo_char_rnn demo_char_rnn_asan train cli sanity
+	rm -f neuralc demo rnn_demo mnist_demo cnn_mnist test_tensor demo_char_rnn demo_char_rnn_asan train cli sanity neurix
 	rm -f menuconfig libneuralc.so
 	rm -f xor_weights.bin mnist_best.bin cnn_mnist_best.bin
 	@echo "Clean done"
