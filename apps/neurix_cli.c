@@ -1,5 +1,5 @@
 /*
- * neurix_cli.c — AI Terminal Assistant with 8 Color Themes
+ * neurix_cli.c — Antigravity AI Terminal Assistant with 8 Color Themes
  */
 
 #define _DEFAULT_SOURCE
@@ -23,8 +23,16 @@
 #define INPUT_BYTES     4096
 #define MAX_VOCAB       65536
 
+#if defined(NEURALC_HAS_CONFIG) || __has_include("neuralc_config.h")
+#include "neuralc_config.h"
+#endif
+
 // Hyperparameters
+#ifdef NEURALC_TEMPERATURE
+static float g_temperature = NEURALC_TEMPERATURE;
+#else
 static float g_temperature = 0.80f;
+#endif
 static int   g_top_k       = 20;
 static float g_rep_penalty = 1.20f;
 static int   g_typing_speed_us = 10000; // 10ms per char
