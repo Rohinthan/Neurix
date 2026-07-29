@@ -1,10 +1,10 @@
-# Neurix v1 — Native Zero-Dependency Edge AI Engine in Pure C
+# ⚡ Neurix v1 — Native Zero-Dependency Edge AI Engine in Pure C
 
 > **"Why wait for someone else to build an embedded AI engine in C? Empowering low-end systems and edge devices with lightweight, high-performance neural intelligence."**
 
 ---
 
-##  The Creator's Story & Project Vision
+## 🌟 The Creator's Story & Project Vision
 
 Modern Artificial Intelligence is often locked behind massive 2+ GB frameworks (PyTorch, TensorFlow) that demand expensive GPUs, python runtimes, and high-end hardware. 
 
@@ -12,19 +12,19 @@ Modern Artificial Intelligence is often locked behind massive 2+ GB frameworks (
 
 ---
 
-## Key Highlights & Engineering Features
+## 🚀 Key Highlights & Engineering Features
 
-- ** Zero External Dependencies**: 100% written in standard C (C11/POSIX). No PyTorch, no Python, no heavy third-party math bloat.
-- ** Embedded & Edge Systems Ready**: Engineered for ultra-low footprint devices. Runs anywhere standard C compiles.
-- ** Classic Antigravity CLI Interface**: Sleek terminal UI featuring straight divider frames, purple aesthetics, 8 selectable color themes, and smooth character typing animations.
-- ** Dynamic Window Auto-Resizing (`SIGWINCH`)**: Catches OS window resize signals (`ioctl`) to automatically adjust border frames live when minimizing, maximizing, or dragging your terminal window.
-- ** Dynamic Path Auto-Discovery**: Automatically locates model weights (`model.bin`) and vocabularies (`assets/vocab.txt`) across environment variables, working directories, or binary location (`/proc/self/exe`).
-- ** Kernel-Style `menuconfig` TUI**: Linux kernel-inspired terminal interface (`make config`) to adjust hyperparameters without touching source code.
-- ** Multi-Core Hardware Acceleration**: Parallel execution via OpenMP CPU threading with optional CUDA & OpenCL GPU backend hooks.
+- **⚡ Zero External Dependencies**: 100% written in standard C (C11/POSIX). No PyTorch, no Python, no heavy third-party math bloat.
+- **📟 Embedded & Edge Systems Ready**: Engineered for ultra-low footprint devices. Runs anywhere standard C compiles.
+- **🔮 Classic Antigravity CLI Interface**: Sleek terminal UI featuring straight divider frames, purple aesthetics, 8 selectable color themes, and smooth character typing animations.
+- **📐 Dynamic Window Auto-Resizing (`SIGWINCH`)**: Catches OS window resize signals (`ioctl`) to automatically adjust border frames live when minimizing, maximizing, or dragging your terminal window.
+- **🔍 Dynamic Path Auto-Discovery**: Automatically locates model weights (`model.bin`) and vocabularies (`assets/vocab.txt`) across environment variables, working directories, or binary location (`/proc/self/exe`).
+- **🎛️ Kernel-Style `menuconfig` TUI**: Linux kernel-inspired terminal interface (`make config`) to adjust hyperparameters without touching source code.
+- **🚀 Multi-Core Hardware Acceleration**: Parallel execution via OpenMP CPU threading with optional CUDA & OpenCL GPU backend hooks.
 
 ---
 
-##  How Neurix v1 Works (Under the Hood)
+## 🧠 How Neurix v1 Works (Under the Hood)
 
 For new users wanting to understand the inner workings of Neurix v1, the architecture is divided into decoupled, modular C translation units:
 
@@ -60,7 +60,7 @@ Neurixv1/
 
 ---
 
-##  Quickstart Guide for New Users
+## 🛠️ Quickstart Guide for New Users
 
 ### 1. Build the Neurix Assistant
 Compile the native binary with zero external dependencies:
@@ -93,7 +93,7 @@ Inside `./neurix`, you can type commands starting with `/`:
 
 ---
 
-##  8 Selectable Color Themes
+## 🎨 8 Selectable Color Themes
 
 Type `/theme` in the CLI to switch color palettes using **↑ / ↓ Arrow Keys**:
 
@@ -108,7 +108,7 @@ Type `/theme` in the CLI to switch color palettes using **↑ / ↓ Arrow Keys**
 
 ---
 
-##  Training Your Own Model on Custom Text
+## 🎓 Training Your Own Model on Custom Text
 
 Want to train Neurix on your own text dataset (books, code, or stories)?
 
@@ -134,7 +134,7 @@ make train
 ./neurix
 ```
 
->  **Tip for Smarter Output**: Set temperature lower (`/temp 0.30`) and Top-K lower (`/topk 10`) inside `./neurix` to produce focused, highly coherent text!
+> 💡 **Tip for Smarter Output**: Set temperature lower (`/temp 0.30`) and Top-K lower (`/topk 10`) inside `./neurix` to produce focused, highly coherent text!
 
 ---
 
