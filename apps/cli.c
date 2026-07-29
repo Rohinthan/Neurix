@@ -44,11 +44,18 @@
 #define MAX_VOCAB       65536   /* static scratch-buffer cap             */
 #define MAX_K           128     /* cap on top-k, independent of vocab    */
 
+#if defined(NEURALC_HAS_CONFIG) || __has_include("neuralc_config.h")
+#include "neuralc_config.h"
+#endif
+
 /* ── tunables ───────────────────────────────────────────────────── */
-#define TEMPERATURE     0.8f    /* spec default; was 0.8f — 0.8 is still a
-                                  * fine choice if you want slightly more
-                                  * peaked sampling, this just matches what
-                                  * was explicitly requested as the default */
+#ifndef TEMPERATURE
+#ifdef NEURALC_TEMPERATURE
+  #define TEMPERATURE NEURALC_TEMPERATURE
+#else
+  #define TEMPERATURE 0.8f
+#endif
+#endif
 #define TOP_K           20
 #define REPEAT_PENALTY  1.2f
 
