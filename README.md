@@ -138,7 +138,7 @@ make train
 
 ---
 
-## the model need .bin trained data and vocab.txt file or you can train this model on your self :
+## the model need .bin trained dataset and vocab.txt file but this in under training. the bin currently not available for use needed a training so wait or you can train this model on yourself using vocab.txt and chunks instruction data's in you're own on you're local machine :
 
 
 ## 📜 License
