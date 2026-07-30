@@ -8,7 +8,7 @@
 
 Modern Artificial Intelligence is often locked behind massive 2+ GB frameworks (PyTorch, TensorFlow) that demand expensive GPUs, python runtimes, and high-end hardware. 
 
-**Neurix v1** was created to break those barriers. Built over **7 weeks of dedicated free-time coding and holidays** by an independent developer, this project proves that you don’t need an enterprise budget or a heavy Python environment to run AI models. By leveraging C11 from first principles, Neurix v1 brings neural network training and inference directly to **low-end hardware, microcontrollers, Raspberry Pi, and embedded systems** in a single **4.4 MB binary**.
+**Neurix v1** was created to break those barriers. Built over **7 weeks of dedicated free-time coding and holidays** by an independent developer, this project proves that you don’t need an enterprise budget or a heavy Python environment to run AI models. By leveraging C11 from first principles, Neurix v1 brings neural network training and inference directly to **low-end hardware, microcontrollers, Raspberry Pi, and embedded systems**. 
 
 ---
 
