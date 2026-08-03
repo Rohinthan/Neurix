@@ -128,6 +128,10 @@ Place your raw text in `assets/data.txt` and run:
 make train
 ./train assets/data.txt assets/vocab.txt model.bin
 ```
+```bash
+./train chunks/chunk_01.txt assets/vocab.txt model.bin
+```
+make sure inside chunk maximum 1M token contains for train the model in high end if you dont have dont try and you can train the model with the file location like second one  create or locate the file using the command
 
 ### Step 3: Run Your New Model
 ```bash
