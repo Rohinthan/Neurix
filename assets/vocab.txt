@@ -11,4 +11,4 @@ accelerate
 acceleration
 accommodation
 
-this order need 2000 unique tokens like this format u can create using ai models to generate */
+this order need 171,146 unique tokens like this format u can create using ai models to generate */
