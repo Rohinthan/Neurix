@@ -1,4 +1,4 @@
-This file can store the hand wrote notes, you can manually add tokens inside this file. token means any texted almost 200k  
+This file can store the hand wrote notes, you can manually add tokens inside this file. token means any texted almost 200k or a million tokens you want .
 like this 
 
 <start> the animal synthesized the compound in order to find new sources of energy <end>
